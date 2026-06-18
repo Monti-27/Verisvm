@@ -1,0 +1,11 @@
+/target
+/node_modules
+/sdks/typescript/dist
+/.claude
+/.superstack
+/CLAUDE.md
+crates/*/examples
+fixtures/* 2.json
+/.env
+/.DS_Store
+*.log
