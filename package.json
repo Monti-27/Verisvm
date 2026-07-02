@@ -1,0 +1,12 @@
+{
+  "name": "verisvm-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "check": "pnpm sdk:check && cargo fmt --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && cargo test --workspace",
+    "sdk:build": "pnpm --filter @verisvm/sdk build",
+    "sdk:check": "pnpm --filter @verisvm/sdk check",
+    "sdk:test": "pnpm --filter @verisvm/sdk test"
+  }
+}
+
