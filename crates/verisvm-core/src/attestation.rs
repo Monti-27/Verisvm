@@ -1,6 +1,9 @@
 use std::collections::BTreeMap;
 
-use base64::{Engine as _, engine::general_purpose::STANDARD};
+use base64::{
+    DecodeError, Engine as _,
+    engine::general_purpose::{STANDARD, STANDARD_NO_PAD, URL_SAFE, URL_SAFE_NO_PAD},
+};
 use ed25519_dalek::{Signature, Signer as _, SigningKey, VerifyingKey};
 use sha2::{Digest as _, Sha256};
 
@@ -72,9 +75,7 @@ pub fn decode_and_verify(envelope: &DsseEnvelope) -> Result<VerifiedAttestation>
         return Err(Error::InvalidSignatureCount);
     }
 
-    let payload = STANDARD
-        .decode(&envelope.payload)
-        .map_err(Error::InvalidPayloadEncoding)?;
+    let payload = decode_base64(&envelope.payload).map_err(Error::InvalidPayloadEncoding)?;
     let statement: Statement = serde_json::from_slice(&payload).map_err(Error::InvalidPayload)?;
     validate_statement(&statement)?;
 
@@ -85,8 +86,7 @@ pub fn decode_and_verify(envelope: &DsseEnvelope) -> Result<VerifiedAttestation>
         .map_err(|_| Error::InvalidPublicKey)?;
     let verifying_key =
         VerifyingKey::from_bytes(operator.as_bytes()).map_err(|_| Error::InvalidPublicKey)?;
-    let signature_bytes: [u8; 64] = STANDARD
-        .decode(&signature_entry.sig)
+    let signature_bytes: [u8; 64] = decode_base64(&signature_entry.sig)
         .map_err(|_| Error::InvalidSignatureEncoding)?
         .try_into()
         .map_err(|_| Error::InvalidSignatureEncoding)?;
@@ -103,10 +103,16 @@ pub fn decode_and_verify(envelope: &DsseEnvelope) -> Result<VerifiedAttestation>
 }
 
 pub fn statement_payload_digest(envelope: &DsseEnvelope) -> Result<Digest> {
-    let payload = STANDARD
-        .decode(&envelope.payload)
-        .map_err(Error::InvalidPayloadEncoding)?;
+    let payload = decode_base64(&envelope.payload).map_err(Error::InvalidPayloadEncoding)?;
     Ok(hash(&payload))
+}
+
+fn decode_base64(value: &str) -> std::result::Result<Vec<u8>, DecodeError> {
+    STANDARD
+        .decode(value)
+        .or_else(|_| STANDARD_NO_PAD.decode(value))
+        .or_else(|_| URL_SAFE.decode(value))
+        .or_else(|_| URL_SAFE_NO_PAD.decode(value))
 }
 
 fn validate_statement(statement: &Statement) -> Result<()> {
@@ -157,7 +163,7 @@ fn validate_statement(statement: &Statement) -> Result<()> {
     }
 }
 
-pub(crate) fn validate_job(job: &crate::VerificationJob) -> Result<()> {
+pub fn validate_job(job: &crate::VerificationJob) -> Result<()> {
     if job.id.trim().is_empty() || job.id.len() > 128 {
         return Err(Error::InvalidJob("job id has an invalid length".to_owned()));
     }
@@ -178,10 +184,10 @@ pub(crate) fn validate_job(job: &crate::VerificationJob) -> Result<()> {
             .source
             .commit
             .bytes()
-            .all(|byte| byte.is_ascii_hexdigit())
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
     {
         return Err(Error::InvalidJob(
-            "commit must be a full hexadecimal object id".to_owned(),
+            "commit must be a full lowercase hexadecimal object id".to_owned(),
         ));
     }
     if job.recipe.solana_verify_version.trim().is_empty()
