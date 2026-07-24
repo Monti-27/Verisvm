@@ -6,6 +6,7 @@ mod value;
 
 pub use attestation::{
     build_statement, decode_and_verify, dsse_pae, sign_statement, statement_payload_digest,
+    validate_job,
 };
 pub use error::{Error, Result};
 pub use model::{

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     BuildOutcome, Deployment, DsseEnvelope, Error, Result, SolanaAddress, VerificationJob,
-    attestation::validate_job, decode_and_verify,
+    decode_and_verify, validate_job,
 };
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
