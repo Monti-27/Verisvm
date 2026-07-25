@@ -1,12 +1,16 @@
 use std::collections::BTreeMap;
 
+use base64::{
+    Engine as _,
+    engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD},
+};
 use ed25519_dalek::SigningKey;
 use serde::Deserialize;
 use verisvm_core::{
     BuildEvidence, BuildOutcome, BuildPredicate, BuildRecipe, Cluster, Deployment, Digest,
     DsseEnvelope, EvidenceIssueKind, IntegrityStatus, ObservedDeployment, QuorumPolicy,
     SolanaAddress, SourceRevision, VerificationJob, WorkerIdentity, build_statement, evaluate,
-    sign_statement,
+    sign_statement, validate_job,
 };
 
 fn digest(byte: u8) -> Digest {
@@ -174,6 +178,26 @@ fn a_tampered_payload_is_rejected() {
 }
 
 #[test]
+fn url_safe_dsse_encoding_is_accepted() {
+    let job = job();
+    let mut attestation = envelope(&job, 1, "aws:us-east-1", BuildOutcome::Match);
+    let payload = STANDARD
+        .decode(&attestation.payload)
+        .expect("valid standard base64 payload");
+    let signature = STANDARD
+        .decode(&attestation.signatures[0].sig)
+        .expect("valid standard base64 signature");
+    attestation.payload = URL_SAFE_NO_PAD.encode(payload);
+    attestation.signatures[0].sig = URL_SAFE_NO_PAD.encode(signature);
+
+    let decision =
+        evaluate(&job, &observed(&job), &policy(), &[attestation]).expect("valid policy");
+
+    assert_eq!(decision.matching_operators, 1);
+    assert_eq!(decision.rejected, 0);
+}
+
+#[test]
 fn allowlist_rejects_unknown_operators() {
     let job = job();
     let attestation = envelope(&job, 1, "aws:us-east-1", BuildOutcome::Match);
@@ -242,4 +266,12 @@ fn policy_must_have_enough_registered_operators() {
     policy.operator_failure_domains.clear();
 
     assert!(evaluate(&job, &observed(&job), &policy, &[]).is_err());
+}
+
+#[test]
+fn commit_identity_requires_canonical_lowercase_hex() {
+    let mut job = job();
+    job.source.commit = "0123456789ABCDEF0123456789ABCDEF01234567".to_owned();
+
+    assert!(validate_job(&job).is_err());
 }
