@@ -1,6 +1,6 @@
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { base58, base64 } from "@scure/base";
+import { base58, base64, base64nopad, base64url, base64urlnopad } from "@scure/base";
 
 import { envelopeSchema, statementSchema } from "./schema.js";
 import {
@@ -68,14 +68,16 @@ function validateStatement(statement: Statement): void {
 }
 
 function decodeBase64(value: string): Uint8Array {
-  try {
-    return base64.decode(value);
-  } catch {
-    throw new Error("invalid base64 encoding");
+  for (const encoding of [base64, base64nopad, base64url, base64urlnopad]) {
+    try {
+      return encoding.decode(value);
+    } catch {
+      continue;
+    }
   }
+  throw new Error("invalid base64 encoding");
 }
 
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
-
