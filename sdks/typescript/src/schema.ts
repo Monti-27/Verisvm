@@ -26,7 +26,7 @@ export const verificationJobSchema = z.object({
   deployment: deploymentSchema,
   source: z.object({
     repository: z.url().refine((value) => new URL(value).protocol === "https:", "repository must use HTTPS"),
-    commit: z.string().regex(/^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$/),
+    commit: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
     treeDigest: digest,
   }),
   recipe: z.object({
