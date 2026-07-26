@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { ed25519 } from "@noble/curves/ed25519.js";
-import { base58, base64 } from "@scure/base";
+import { base58, base64, base64urlnopad } from "@scure/base";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -11,6 +11,7 @@ import {
   decodeAndVerify,
   dssePae,
   evaluate,
+  verificationJobSchema,
   type BuildOutcome,
   type BuildPredicate,
   type DsseEnvelope,
@@ -117,6 +118,13 @@ function operator(keyByte: number): string {
 }
 
 describe("VeriSVM policy", () => {
+  it("requires canonical lowercase commit ids", () => {
+    const verificationJob = job();
+    verificationJob.source.commit = "0123456789ABCDEF0123456789ABCDEF01234567";
+
+    expect(verificationJobSchema.safeParse(verificationJob).success).toBe(false);
+  });
+
   it("verifies the Rust-generated wire fixture", () => {
     const fixture = JSON.parse(
       readFileSync(new URL("../../../fixtures/quorum.json", import.meta.url), "utf8"),
@@ -135,6 +143,17 @@ describe("VeriSVM policy", () => {
   it("verifies a signed envelope", () => {
     const verificationJob = job();
     const verified = decodeAndVerify(envelope(verificationJob, 1, "aws:us-east-1", "match"));
+    expect(verified.statement.predicate.job).toEqual(verificationJob);
+  });
+
+  it("accepts URL-safe DSSE encoding", () => {
+    const verificationJob = job();
+    const attestation = envelope(verificationJob, 1, "aws:us-east-1", "match");
+    attestation.payload = base64urlnopad.encode(base64.decode(attestation.payload));
+    attestation.signatures[0]!.sig = base64urlnopad.encode(base64.decode(attestation.signatures[0]!.sig));
+
+    const verified = decodeAndVerify(attestation);
+
     expect(verified.statement.predicate.job).toEqual(verificationJob);
   });
 
