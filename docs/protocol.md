@@ -16,6 +16,23 @@ The statement type is `https://in-toto.io/Statement/v1`. The predicate type is `
 
 The subject identifies the deployed program binary with a SHA-256 digest. The predicate contains the immutable verification job, worker failure domain, build outcome, output digest when available, transcript digest, and observation slot.
 
+## Source tree digest
+
+The source tree digest is SHA-256 over this byte sequence:
+
+```text
+"VERISVM-SOURCE-TREE-V1\0"
+u64be(entry count)
+for each entry in raw bytewise path order:
+  u8(mode tag)
+  u64be(path length)
+  path bytes
+  u64be(content length)
+  content bytes
+```
+
+Mode tags are `0` for a regular file, `1` for an executable file, and `2` for a symlink. Symlink content is its link target. The digest is derived from committed Git objects rather than a mutable working tree.
+
 ## Quorum rules
 
 - Only valid signatures from operators in the policy registry are considered.
