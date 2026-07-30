@@ -1,0 +1,19 @@
+[package]
+name = "verisvm-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+sha2.workspace = true
+thiserror.workspace = true
+url.workspace = true
+verisvm-core = { path = "../verisvm-core" }
+
+[dev-dependencies]
+ed25519-dalek.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true
