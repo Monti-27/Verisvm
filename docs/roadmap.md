@@ -9,12 +9,13 @@
 
 ## Milestone 2: evidence worker
 
-- Solana Verify adapter
-- pinned build-image digest enforcement
-- content-addressed repository checkout
-- isolated no-network build execution
-- transcript and artifact hashing
-- twenty-program reproducibility corpus
+- [x] trusted worker controller and executor contract
+- [ ] Solana Verify adapter
+- [x] pinned build-image digest enforcement
+- [x] bounded Git object acquisition and content-addressed materialization
+- [ ] isolated no-network build execution
+- [x] transcript and artifact hashing
+- [ ] twenty-program reproducibility corpus
 
 ## Milestone 3: live Solana data
 
@@ -41,4 +42,3 @@ A transferable token is out of scope until all of these are true:
 - one thousand completed verification jobs
 - audited staking and dispute programs
 - ninety stable testnet days
-
