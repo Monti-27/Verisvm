@@ -6,7 +6,7 @@ VeriSVM combines signed reproducible-build evidence from independent workers and
 
 ## Current milestone
 
-The repository currently contains the protocol foundation:
+The repository currently contains the protocol and worker-controller foundation:
 
 - an in-toto Statement v1 profile for Solana build evidence
 - DSSE signing and Ed25519 verification compatible with Solana identities
@@ -15,15 +15,19 @@ The repository currently contains the protocol foundation:
 - matching Rust and TypeScript SDKs
 - a CLI for inspecting attestations and evaluating a quorum
 - finalized upgradeable-program snapshots and existing Otter Verify record discovery
+- an isolated executor contract with source, builder, transcript, deployment, and signer verification
+- bounded Git object acquisition and content-addressed source materialization
 
-The worker sandbox, Otter Verify indexer, API service, GitHub Action, and on-chain registry follow in later milestones.
+The microVM build runner, Otter Verify indexer, API service, GitHub Action, and on-chain registry follow in later milestones.
 
 ## Workspace
 
 ```text
 crates/verisvm-core     Rust protocol types, signature verification, and policy engine
 crates/verisvm-cli      Local inspection and policy evaluation CLI
+crates/verisvm-executor Guest-side source acquisition and execution components
 crates/verisvm-solana   Finalized deployment snapshots and Otter Verify compatibility
+crates/verisvm-worker   Trusted worker controller and executor boundary
 sdks/typescript         Browser and server TypeScript policy SDK
 fixtures                Cross-language protocol fixtures
 docs                    Architecture, protocol profile, and roadmap
