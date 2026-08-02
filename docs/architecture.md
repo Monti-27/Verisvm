@@ -8,6 +8,7 @@ VeriSVM starts after a verification job has been defined and before a consumer d
 
 ```text
 VerificationJob
+  -> bounded Git object resolution
   -> isolated Solana Verify workers
   -> in-toto statements in DSSE envelopes
   -> signature and schema validation
@@ -29,9 +30,10 @@ Build evidence uses an in-toto Statement v1 payload and a DSSE envelope. DSSE si
 
 ## Later services
 
-- Worker supervisor with content-addressed source checkout, pinned images, no-network build phase, transcript hashing, and secret-free logs
+- Worker supervisor with secure Git object acquisition, pinned images, no-network build execution, and secret-free logs
 - Indexer for upgradeable loader state and Otter Verify PDAs
 - API and webhook service for program status and upgrade invalidation
 - GitHub Action for job submission and policy checks
 - Devnet registry for compact commitment, reveal, quorum, and challenge state
 
+The worker controller and untrusted build executor are separate trust domains. The controller validates every observed execution input before signing. The executor runs Solana Verify inside a disposable microVM and never receives signing keys or control-plane credentials. The detailed contract is in [worker.md](worker.md).
